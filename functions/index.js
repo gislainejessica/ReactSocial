@@ -1,8 +1,9 @@
 const functions = require('firebase-functions');
 const admin = require('firebase-admin');
 const firebase = require('firebase')
-// const db = admin.firestore()
+// const db = admin.firestore() //&& req.headers.authorization.startWith("Bearer ")
 const app = require('express')()
+
 const firebaseConfig = {
     apiKey: "AIzaSyBp5xEiAOvtlhmy6LwMEt3UcSnysYk_trg",
     authDomain: "meufirstproject.firebaseapp.com",
@@ -10,14 +11,56 @@ const firebaseConfig = {
     projectId: "meufirstproject",
     storageBucket: "meufirstproject.appspot.com",
     messagingSenderId: "990480027010",
-    appId: "1:990480027010:web:7cfcaa5e0a8a9fbd"
-  };
+    appId: "1:990480027010:web:4ffe42a49333ed56"
+    };
 
 firebase.initializeApp(firebaseConfig)
 admin.initializeApp();
 
+// Vericar se variavel de requisicão está vazia 
+const isEmpty = (string) => {
+    if (string.trim() === '') return true 
+    else return false
+}
+
+const isEmail = (email) => {
+    const emailRegEx = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+    if (email.match(emailRegEx)) return true
+    else return false
+}
+
+const FBAuth = (req, res, next) => {
+    let idToken;
+    if (req.headers.authorization ){
+        idToken = req.headers.authorization.split("Bearer ")[1]
+    }else{
+        console.error('No token found (Cadê o token)')
+        return res.status(402).json({error: 'Autorização negada'})
+    }
+    // Verificar se token tem um usuario identificado pelo sistema
+    admin.auth().verifyIdToken(idToken)
+    .then( decodedToken => {
+        req.user = decodedToken
+        console.log(decodedToken)
+        return admin.firestore().collection('users')
+        .where("userId","==", req.user.uid)
+        .limit(1)
+        .get()
+    })
+    .then(data => {
+        req.user.handle =  data.docs[0].data().handle
+        console.log(req)
+        return next()
+    })
+    .catch(erro => {
+        console.error('Erro durante a verificação', erro)
+        return res.status(402).json({errou: 'Deu ruim na verificação'})
+    })
+
+}
+
 app.get('/telas', (req, res) => {
-    admin.firestore().collection("telas")
+    admin.firestore().collection('telas')
       .orderBy('createAt', 'desc')
       .get()
       .then( (data) => {
@@ -35,40 +78,26 @@ app.get('/telas', (req, res) => {
         .catch( (erro => console.error(erro) ))
 })
 
-app.post('/tela', (req, res) => {
+// MiddleWare para verificar se usuario está logado no sistema (FBauth)
+app.post('/tela', FBAuth, (req, res) => {
     const novaTela = {
         body: req.body.body,
-        userHandle: req.body.userHandle,
+        userHandle: req.user.handle, 
         createAt: new Date().toISOString()
-    };
-    admin.firestore().collection("telas")
+    }
+    admin.firestore().collection('telas')
       .add(novaTela)
       .then(doc => {
         res.json({message:  `Documento ${doc.id} criado com sucesso`})
       })
       .catch( erro => {
-        res.status(500).json({erro : 'Algo deu errrado'})
+        res.status(500).json({erro : 'Algo deu muito errrado'})
         console.error(erro) 
       })
 })
 
-// Vericar se variavel de requisicão está vazia 
-const isEmpty = (string) => {
-    if (string.trim() === '') return true 
-    else return false
-}
-
-const isEmail = (email) => {
-    const emailRegEx = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
-    if (email.match(emailRegEx)) return true
-    else return false
-}
-
 let token;
 let userId;
-/* Se na requisição vier faltando uma chave no json, vai dar erro... 
-    garantir que frontend sempre envie todas as propriedades mesmo que seja um string vazia
-*/
 // Rota de registro
 app.post('/registrar', (req, res) => {
     const novoUser = {
@@ -165,4 +194,3 @@ app.post('/login', (req, res) => {
 })
 
 exports.api = functions.https.onRequest(app);
-
