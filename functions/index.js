@@ -52,8 +52,23 @@ app.post('/tela', (req, res) => {
       })
 })
 
+// Vericar se variavel de requisicão está vazia 
+const isEmpty = (string) => {
+    if (string.trim() === '') return true 
+    else return false
+}
+
+const isEmail = (email) => {
+    const emailRegEx = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+    if (email.match(emailRegEx)) return true
+    else return false
+}
+
 let token;
 let userId;
+/* Se na requisição vier faltando uma chave no json, vai dar erro... 
+    garantir que frontend sempre envie todas as propriedades mesmo que seja um string vazia
+*/
 // Rota de registro
 app.post('/registrar', (req, res) => {
     const novoUser = {
@@ -62,6 +77,23 @@ app.post('/registrar', (req, res) => {
         confirmSenha: req.body.confirmSenha,
         handle: req.body.handle,
     }
+    let erros = {}
+    // Verifica validade do email
+    if (isEmpty(novoUser.email))
+        erros.email = "Não pode ser vazio"
+    else if (!isEmail(novoUser.email))
+        erros.email = "Informe um email válido"
+    // Verifica se Senha foi digitada
+    if (isEmpty(novoUser.senha))
+        erros.senha = "Não pode ser vazio"
+    if (novoUser.confirmSenha !== novoUser.senha) 
+        erros.confirmSenha = "Senhas devem ser iguais"
+    // Handle not empty
+    if (isEmpty(novoUser.handle))
+        erros.handle = "Não pode ser vazio"
+    // Vericar se algum erro foi encontrado nas entradas
+    if (Object.keys(erros).length > 0) 
+        return res.status(400).json(erros)
 
     admin.firestore().doc(`/users/${novoUser.handle}`).get().then(doc => {
         if (doc.exists)
@@ -97,65 +129,40 @@ app.post('/registrar', (req, res) => {
         }
     })
 
-    // Proxima etapa validar entrada (Next)
+})
 
+// Rota de login
+app.post('/login', (req, res) => {
+    const user = {
+        email: req.body.email,
+        senha: req.body.senha
+    }
+    let erros = {}
+    // Verifica validade do email
+    if (isEmpty(user.email))
+        erros.email = "Não pode ser vazio"
+    // Verifica se Senha foi digitada
+    if (isEmpty(user.senha))
+        erros.senha = "Não pode ser vazio"
+    // Vericar se algum erro foi encontrado nas entradas
+    if (Object.keys(erros).length > 0) 
+        return res.status(400).json(erros)
+    
+    firebase.auth().signInWithEmailAndPassword(user.email, user.senha)
+        .then(data => {
+            return data.user.getIdToken()
+        })
+        .then(token => {
+            return res.json({token})
+        })
+        .catch(erro => {
+            console.error(erro)
+            if (erro.code === "auth/user-not-found")
+                return res.status(403).json({general: "Email ou senha errada, tente novamente!"})
+            else
+                return res.status(500).json({error: erro.code})
+        })
 })
 
 exports.api = functions.https.onRequest(app);
 
-// Testes 
-{
-// // Create and Deploy Your First Cloud Functions
-// // https://firebase.google.com/docs/functions/write-firebase-functions
-/** Teste de conexão com o firebase sem o uso do express, para testar conexão com o data base 
-    exports.helloWorld = functions.https.onRequest((request, response) => {
-    response.send("Hello Jessica!");
-    });
-
-    exports.getScreems = functions.https.onRequest((req, res) => {
-        admin.firestore()
-            .collection("telas")
-            .get()
-            .then( (data) => {
-                let telas = [];
-                data.forEach( (doc) => {
-                    telas.push(doc.data())
-                });
-            return res.json(telas);
-            })
-            .catch( (erro => console.error(erro) ))
-    });
-
-    exports.createScreem = functions.https.onRequest((req, res) => {
-        if (req.method !== "POST")
-            return res.status(400).json({erro : "Metodo não permitido"})
-        const novaTela = {
-            body: req.body.body,
-            userHandle: req.body.userHandle,
-            createAt: admin.firestore.Timestamp.fromDate(new Date())
-        };
-
-        admin.firestore()
-            .collection('telas')
-            .add(novaTela)
-            .then(doc => {
-                res.json({message:  `Documento ${doc.id} criado com sucesso`})
-            })
-            .catch( erro => {
-                res.status(500).json({erro : 'Algo deu errrado'})
-                console.error(erro) 
-            })
-    })
-    ///////////////////////
-        firebase
-        .auth()
-        .createUserWithEmailAndPassword(novoUser.email, novoUser.senha)
-        .then(data => {
-            return res.status(201).json({message : `Usuário ${data.user.uid} criado com sucesso!`})
-        })
-        .catch(erro => {
-            console.error(erro)
-            return res.status(500).json({ wrong: erro.code})
-        })
- */
-}
