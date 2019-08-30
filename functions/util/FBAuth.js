@@ -2,9 +2,10 @@ const { admin } = require('../util/admin');
 
 module.exports = (req, res, next) => {
     let idToken;
-    if (req.headers.authorization ){
+    if ( req.headers.authorization ){
         idToken = req.headers.authorization.split("Bearer ")[1]
-    }else{
+    }
+    else {
         console.error('No token found (Cadê o token)')
         return res.status(402).json({error: 'Autorização negada'})
     }
@@ -12,15 +13,13 @@ module.exports = (req, res, next) => {
     admin.auth().verifyIdToken(idToken)
     .then( decodedToken => {
         req.user = decodedToken
-        console.log(decodedToken)
         return admin.firestore().collection('users')
         .where("userId","==", req.user.uid)
         .limit(1)
         .get()
     })
     .then(data => {
-        req.user.handle =  data.docs[0].data().handle
-        console.log(req)
+        req.user.handle = data.docs[0].data().handle
         return next()
     })
     .catch(erro => {

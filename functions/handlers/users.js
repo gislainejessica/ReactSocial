@@ -1,4 +1,4 @@
-const {admin} = require('../util/admin');
+const { admin } = require('../util/admin');
 const firebase = require('firebase');
 const config = require('../util/config');
 const { validarRegistroDados, validarLoginDados } = require('../util/validadores');
@@ -15,6 +15,7 @@ exports.registrar = (req, res) => {
     const {valid, erros} = validarRegistroDados(novoUser)
     if (!valid) 
         return res.status(400).json({erros})
+    const noImg = 'no-img.png'
 
     admin.firestore().doc(`/users/${novoUser.handle}`).get().then(doc => {
         if (doc.exists)
@@ -31,6 +32,7 @@ exports.registrar = (req, res) => {
                         handle:novoUser.handle,
                         email:novoUser.email,
                         createAt:new Date().toISOString(),
+                        imageUrl: `https://firebasestorage.googleapis.com/v0/b/${config.storageBucket}/o/${noImg}?alt=media`,
                         userId
                     }
                     return admin.firestore().doc(`/users/${novoUser.handle}`).set(userCredencial)
@@ -74,4 +76,53 @@ exports.login = (req, res) => {
             else
                 return res.status(500).json({error: erro.code})
         })
+};
+
+exports.upLoadImage = (req, res) => {
+    const BusBoy = require('busboy');
+    const fs = require('fs');
+    const os = require('os');
+    const path = require('path');
+
+    const busboy = new BusBoy({headers: req.headers});
+    let nomeArquivoImagem;
+    let imagemfinal = {}
+
+    busboy.on('file', (fieldname, file, filename, encoding, mimetype) => {
+        console.log(filename)
+        if (mimetype !== 'image/png' && mimetype !== 'image/jpeg'){
+            return res.status(400).json({errado: "Tipo de arquivo não compatível"})
+        }
+        // identificar a extensão do arquivo (meu.arquivo.png)
+        const imageExtension = filename.split('.')[filename.split('.').length -1]
+        // 2392038242.png
+        nomeArquivoImagem = `${Math.round(Math.random()*1000000000)}. ${imageExtension}`
+        const caminhoArquivo = path.join(os.tmpdir(), nomeArquivoImagem)
+        imagemfinal = { caminhoArquivo, mimetype } 
+        // Criar o arquivo (no diretório) atraves do sistema de manipulação de arquivos (fs) pipe() - NodeJs
+        file.pipe(fs.createWriteStream(caminhoArquivo))
+    });
+    
+    busboy.on('finish', () => {
+        admin.storage().bucket().upload(imagemfinal.caminhoArquivo, {
+            resumable: false, 
+            metadata: {
+                metadata : {
+                    contentType: imagemfinal.mimetype
+            }}
+        })
+        .then(() => {
+            const imageUrl = `https://firebasestorage.googleapis.com/v0/b/${config.storageBucket}/o/${nomeArquivoImagem}?alt=media`
+            console.log(imageUrl)
+            return admin.firestore().doc(`/users/${req.user.handle}`).update({imageUrl})
+        } )
+        .then(()=> {
+            return res.json({message: "Imagem atualizada com sucesso"})
+        })
+        .catch((erro) => {
+            console.error(erro)
+            return res.status(500).json({errorr: erro.code})
+        })
+    });
+    busboy.end(req.rawBody);
 };
