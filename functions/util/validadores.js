@@ -1,5 +1,8 @@
 // Vericar se variavel de requisicão está vazia 
-// /&& req.headers.authorization.startWith("Bearer ")
+//  && req.headers.authorization.startWith("Bearer ")
+/** if (data.website.trim().substring(0,4) !== 'http')
+            userDetails.website = `http://${data.website.trim()}`
+        else  */
 
 const isEmpty = (string) => {
     if (string.trim() === '') return true 
@@ -46,4 +49,15 @@ exports.validarLoginDados = (data) => {
         erros,
         valid: Object.keys(erros).length === 0 ? true : false
     }
+};
+
+exports.reduceUseDatails = (data) => {
+    let userDetails = {}
+    if (!isEmpty(data.bio))
+        userDetails.bio = data.bio
+    if (!isEmpty(data.website))
+        userDetails.website = data.website
+    if (!isEmpty(data.location))
+        userDetails.location = data.location
+    return userDetails  
 };

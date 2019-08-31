@@ -1,7 +1,7 @@
 const { admin } = require('../util/admin');
 const firebase = require('firebase');
 const config = require('../util/config');
-const { validarRegistroDados, validarLoginDados } = require('../util/validadores');
+const { validarRegistroDados, validarLoginDados, reduceUseDatails } = require('../util/validadores');
 
 firebase.initializeApp(config);
 
@@ -77,7 +77,7 @@ exports.login = (req, res) => {
                 return res.status(500).json({error: erro.code})
         })
 };
-
+// Upaload a profile picture
 exports.upLoadImage = (req, res) => {
     const BusBoy = require('busboy');
     const fs = require('fs');
@@ -124,5 +124,41 @@ exports.upLoadImage = (req, res) => {
             return res.status(500).json({errorr: erro.code})
         })
     });
+    
     busboy.end(req.rawBody);
+};
+// Adiciona detalhes a conta do usuario
+exports.addUserDetails = (req, res) => {
+    let userDetails = reduceUseDatails(req.body)
+    admin.firestore().doc(`/users/${req.user.handle}`).update(userDetails)
+       .then(()=> {
+            return res.status(200).json({ message: 'Detalhes adicionados com sucesso' })
+        })
+        .catch(erro => {
+            console.error(erro)
+            return res.status(500).json({ error: `Não adicionei nada ;-( ${erro.code}`})
+    })
+};
+// get on use details
+exports.getAuthenticatedUser = (req, res) => {
+    let resData = {}
+    admin.firestore().doc(`/users/${req.user.handle}`).get()
+    .then(doc => {
+        if (doc.exists){
+            resData.credentials = doc.data()
+            return admin.firestore().collection('likes')
+                        .where('userHandle','===', req.user.handle).get()
+        }
+    })
+    .then(data => {
+        resData.likes = []
+        data.forEach(doc => {
+            resData.likes.push(doc.data())
+        })
+        return res.json(resData)
+    })
+    .catch(erro => {
+        console.log(erro)
+        return res.status(500).json({error: erro.code})
+    })
 };
