@@ -147,7 +147,7 @@ exports.getAuthenticatedUser = (req, res) => {
         if (doc.exists){
             resData.credentials = doc.data()
             return admin.firestore().collection('likes')
-                        .where('userHandle','===', req.user.handle).get()
+                        .where('userHandle','==', req.user.handle).get()
         }
     })
     .then(data => {
@@ -159,6 +159,6 @@ exports.getAuthenticatedUser = (req, res) => {
     })
     .catch(erro => {
         console.log(erro)
-        return res.status(500).json({error: erro.code})
+        return res.status(500).json({error: `Ta bom sqn ${erro.code}  `})
     })
 };

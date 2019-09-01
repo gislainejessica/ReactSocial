@@ -17,6 +17,13 @@ const db = {
         bio: 'Alguma informação do usuario',
         website: 'www.vamosfazervaler.com.br',
         location:'São Paulo, BR'
+    }],
+
+    comments: [{
+        body: 'O corpo da tela',
+        telaId:"OGotPDpCXn1g",
+        userHandle: 'user',
+        createAt: '2019-08-28T18:25:08.345Z',
     }]
 };
 
