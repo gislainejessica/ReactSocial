@@ -1,6 +1,6 @@
 const functions = require('firebase-functions');
 const app = require('express')();
-const { getAllTelas, postOneTela, getTela, comentarNaTela } = require('./handlers/telas');
+const { getAllTelas, postOneTela, getTela, comentarNaTela, likeTela, unlikeTela, deletaTela } = require('./handlers/telas');
 const { registrar, login, upLoadImage, addUserDetails, getAuthenticatedUser } = require('./handlers/users');
 const FBAuth = require('./util/FBAuth');
 
@@ -10,11 +10,10 @@ app.post('/tela', FBAuth, postOneTela);
 app.get('/tela/:telaId', getTela);
 app.post('/tela/:telaId/comment', FBAuth, comentarNaTela);
 
-// Next TODO
+app.get('/tela/:telaId/like', FBAuth, likeTela);
+app.get('/tela/:telaId/unlike', FBAuth, unlikeTela);
 // Deletar tela
-// Dar like na tela
-// Dar unlike na tela
-// Comentar na tela 
+app.delete('/tela/:telaId', FBAuth, deletaTela);
 
 // Rota de usuarios
 app.post('/registrar', registrar);
