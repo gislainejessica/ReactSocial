@@ -155,10 +155,82 @@ exports.getAuthenticatedUser = (req, res) => {
         data.forEach(doc => {
             resData.likes.push(doc.data())
         })
-        return res.json(resData)
+        return admin.firestore().collection(`notifications`)
+            .where('recipient', '==', req.user.handle)
+            .orderBy('createAt', 'desc')
+            .limit(10)
+            .get()
     })
+    .then((data => {
+        resData.notifications = []
+        data.forEach(doc => {
+            resData.notifications.push({
+                notificationId: doc.id,
+                recipient: doc.data().recipient,
+                sender: doc.data().sender,
+                createAt: doc.data().createAt,
+                telaId: doc.data().telaId,
+                type: doc.data().type,
+                read: doc.data().read
+            })
+        })
+        return res.json(resData)
+    }))
     .catch(erro => {
         console.log(erro)
         return res.status(500).json({error: `Ta bom sqn ${erro.code}  `})
     })
+};
+// Get detalhes de qualquer usuário
+exports.getUserDetails = (req, res) => {
+    let userData = {}
+    admin.firestore().doc(`/users/${req.params.handle}`).get()
+        .then(doc => {
+            if (doc.exists){
+                userData.user = doc.data()
+                return admin.firestore()
+                    .collection('telas')
+                    .where('userHandle', '==', req.params.handle)
+                    .orderBy('createAt', 'desc')
+                    .get()
+            }else {
+                return res.status(404).json({errro: 'Não encontrei você'})
+            }
+        })
+        .then(data => {
+            userData.telas = []
+            data.forEach(doc => {
+                userData.telas.push({
+                    body: doc.data().body,
+                    createAt: doc.data().createAt,
+                    userHandle: doc.data().userHandle,
+                    userImage: doc.data().userImage,
+                    likeCount: doc.data().likeCount,
+                    commentCount: doc.data().commentCount,
+                    telaId: doc.id
+                })
+            })
+            return res.json(userData)
+        })
+        .catch( erro => {
+            console.error(erro)
+            return res.status(500).json({errro: erro.code})
+        })
+};
+
+exports.marcarNotesLidos = (req, res) => {
+    let batch = admin.firestore().batch()
+    req.body.forEach(notificationId => {
+        const notification = admin.firestore().doc(`/notifications/${notificationId}`)
+        batch.update(notification, {read: true})
+    })
+    batch
+        .commit()
+        .then(() => {
+            return res.json({Message: 'Notificação marcada como lida'})
+        })
+        .catch( erro => {
+            console.error(erro)
+            return res.status(500).json({errro: erro.code})
+        })
 };

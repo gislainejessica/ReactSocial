@@ -24,6 +24,15 @@ const db = {
         telaId:"OGotPDpCXn1g",
         userHandle: 'user',
         createAt: '2019-08-28T18:25:08.345Z',
+    }],
+    notifications:[{
+        recipient: 'user',
+        sender:'jessica',
+        read:'true | false',
+        telaId: 'OGotPDpCXn1g',
+        type: 'like | comment',
+        createAt: '2019-08-28T18:25:08.345Z',
+
     }]
 };
 
