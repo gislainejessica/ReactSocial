@@ -14,6 +14,7 @@ exports.getAllTelas =  (req, res) => {
                 body : doc.data().body,
                 userHandle : doc. data().userHandle,
                 createAt : doc.data().createAt,
+                userImage: doc.data().userImage
             })
         });
         return res.json(telas);
@@ -72,7 +73,9 @@ exports.getTela = (req, res) => {
 };
 
 exports.comentarNaTela = (req, res) => {
-    if (req.body.body === '') return res.status(400).json({ erro: "Escreva alguma coisa, Porfa! "})
+    // trim()
+    if (req.body.body === '') 
+        return res.status(400).json({ comment: "Escreva alguma coisa, Porfa! "})
     const comentario = {
         body: req.body.body,
         telaId: req.params.telaId,

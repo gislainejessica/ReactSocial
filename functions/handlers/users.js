@@ -46,7 +46,7 @@ exports.registrar = (req, res) => {
                         return res.status(400).json({ email: "Email já está sendo usado"})
                     }
                     else{
-                        return res.status(500).json({error: err.code})
+                        return res.status(500).json({general: "Alguma coisa deu errada, tente outra vez"})
                     }
                 })
         }
@@ -71,10 +71,7 @@ exports.login = (req, res) => {
         })
         .catch(erro => {
             console.error(erro)
-            if (erro.code === "auth/user-not-found")
-                return res.status(403).json({general: "Email ou senha errada, tente novamente!"})
-            else
-                return res.status(500).json({error: erro.code})
+            return res.status(403).json({general: "Email ou senha errada, tente novamente!"})
         })
 };
 // Upaload a profile picture
