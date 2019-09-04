@@ -1,4 +1,4 @@
-// Esquema do como está armazenado os dados no banco de dadod 
+// Esquema do como está armazenado os dados no banco de dados
 const db = {
     telas: [{
         userHandle: 'user',
@@ -56,4 +56,4 @@ const userDetails = {
         userHandle: 'jessica',
         telaId:'dkhgfhedsfssa'  
     }]
-}
+};

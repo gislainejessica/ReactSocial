@@ -30,7 +30,7 @@ app.get('/telas', getAllTelas);
 app.delete('/tela/:telaId', FBAuth, deletaTela);
 
 // Rota de usuarios
-app.post('/notifications', FBAuth, marcarNotesLidos)
+app.post('/notifications', FBAuth, marcarNotesLidos);
 app.post('/registrar', registrar);
 app.post('/login', login);
 app.post('/user', FBAuth, addUserDetails);
@@ -148,4 +148,4 @@ exports.onTelaDelete = functions.firestore.document(`telas/{telaId}`).onDelete((
             console.error(erro)
         })
 
-})
+});

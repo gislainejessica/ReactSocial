@@ -3,18 +3,20 @@
 const { admin } = require('../util/admin');
 
 exports.getAllTelas =  (req, res) => {
-    admin.firestore().collection('telas')
+    admin.firestore()
+    .collection('telas')
     .orderBy('createAt', 'desc')
     .get()
     .then( (data) => {
         let telas = [];
+            console.log(data)
             data.forEach( (doc) => {
             telas.push({
                 telaId : doc.id,
                 body : doc.data().body,
                 userHandle : doc. data().userHandle,
                 createAt : doc.data().createAt,
-                userImage: doc.data().userImage
+                userImage: doc.data().imageUrl,
             })
         });
         return res.json(telas);
