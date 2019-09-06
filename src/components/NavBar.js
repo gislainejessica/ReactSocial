@@ -1,5 +1,5 @@
 import React, { Component } from 'react'
-import Link from 'react-router-dom/Link'
+import { Link } from 'react-router-dom'
 import AppBar from '@material-ui/core/AppBar'
 import Button from '@material-ui/core/Button'
 import ToolBar from '@material-ui/core/Toolbar'

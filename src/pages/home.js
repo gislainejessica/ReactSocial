@@ -20,10 +20,10 @@ export default class home extends Component {
   }
   render() {
     let recentTelasMarcada = this.state.telas ? (
-      this.state.telas.map(tela => <Tela tela = {tela}/>)
+      this.state.telas.map(tela => <Tela key = {tela.telaId} tela = {tela}/>)
     ): <p> Loading... </p>
     return (
-    <Grid container spacing = {16} >
+    <Grid container>
       <Grid item sm = {8} xs = {12}>
        {recentTelasMarcada}
       </Grid>
