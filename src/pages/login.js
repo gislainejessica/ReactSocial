@@ -8,7 +8,7 @@ import TextField from '@material-ui/core/TextField';
 import Button from '@material-ui/core/Button';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
-import CircularProgress from '@material-ui/core/CircularProgress'
+import CircularProgress from '@material-ui/core/CircularProgress';
 
 const styles = {
   form: {
@@ -34,8 +34,6 @@ const styles = {
   },
   progress: {
     position: "absolute"
-
-
   }
 }
 
@@ -61,6 +59,7 @@ class login extends Component {
     axios.post('/login', dadosUser)
       .then(res => {
         console.log(res.data)
+        localStorage.setItem('FBidToken', `Bearer ${res.data.token}`)
         this.setState({
           loading : false
         })
@@ -99,6 +98,7 @@ class login extends Component {
                 label ='Senha' className = {classes.testField} 
                 helperText = {erros.senha} error = {erros.senha ? true: false} 
                 value = {this.state.password} onChange = {this.handleChange} fullWidth/>
+
             {erros.general && (
               <Typography variant = 'body2' className = {classes.custonError}> {erros.general} </Typography>
             )}
@@ -108,7 +108,7 @@ class login extends Component {
                  {loading && (<CircularProgress size = {30}className = {classes.progress}/>)}
             </Button>
             <br/>
-            <small> Não tem uma conta? registre-se <Link to = "/registrar">  Here </Link> </small>
+            <small> Já tens um conta faça o login <Link to = "/registr µ──────ar">  Aqui </Link> </small>
           </form>
         </Grid>
         <Grid item sm />
