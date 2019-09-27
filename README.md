@@ -2,4 +2,4 @@
 
 Lembrar de colocar os prints nesse Readme
 
-
+yarn add jwt-decode
