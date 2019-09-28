@@ -1,4 +1,4 @@
-import React, { Component } from 'react'
+import React, { useEffect, useState } from 'react'
 import withStyles from '@material-ui/core/styles/withStyles'
 import PropTypes from 'prop-types';
 import Grid from '@material-ui/core/Grid';
@@ -36,50 +36,33 @@ const styles = {
     position: "absolute"
   }
 }
-class login extends Component {
-  constructor(){
-    super()
-    this.state ={
-      email:'',
-      password:'',
-      loading: false,
-      erros:{},
-    }
-  }
-  handleSubmit = (event) =>{
-    event.preventDefault();
-    this.setState({
-      loading : true
-    })
-    const dadosUser = {
-      email: this.state.email,
-      senha: this.state.password
-    }
-    axios.post('/login', dadosUser)
-      .then(res => {
-        console.log(res.data)
-        localStorage.setItem('FBidToken', `Bearer ${res.data.token}`)
-        this.setState({
-          loading : false
-        })
-        this.props.history.push('/')
-      })
-      .catch(erro => {
-        this.setState({
-          error: erro.response.data,
-          loading: false
-        })
-      })
-  }
+function Login (props){
+    const [email, setEmail] = useState('')
+    const [password, setPassword] = useState('')
+    const [loading, setLoading] = useState(false)
+    const [erros, setErros] = useState({})
+    const {classes} = props
 
-  handleChange = (event) => {
-    this.setState({
-      [event.target.name] : event.target.value
-    })
-  }
-  render() {
-    const {classes} = this.props
-    const {erros, loading} = this.state
+    const  handleSubmit = (event) =>{
+      event.preventDefault();
+      setLoading(true)
+      const dadosUser = {
+        email: email,
+        senha: password
+      }
+      axios.post('/login', dadosUser)
+        .then(res => {
+          console.log(res.data)
+          localStorage.setItem('FBidToken', `Bearer ${res.data.token}`)
+          setLoading(false)
+          props.history.push('/')
+        })
+        .catch(erro => {
+          setErros(erro.response.data)
+          setLoading(false)
+        })
+      }
+   
     return (
       <Grid container className = {classes.form} >
         <Grid item sm />
@@ -88,15 +71,15 @@ class login extends Component {
           <Typography variant = "h2" className = {classes.title}>
             Login
           </Typography>
-          <form noValidate onSubmit = {this.handleSubmit}>
+          <form noValidate onSubmit = {handleSubmit}>
             <TextField id = 'email' name ='email' type = 'email' label = 'Email' className = {classes.testField} 
                 helperText = {erros.email} error = {erros.email ? true: false} 
-                value = {this.state.email} onChange = {this.handleChange} fullWidth/>
+                value = {email} onChange = {event => setEmail(event.target.value)} fullWidth/>
 
              <TextField id = 'password' name = 'password' type = 'password' 
                 label ='Senha' className = {classes.testField} 
                 helperText = {erros.senha} error = {erros.senha ? true: false} 
-                value = {this.state.password} onChange = {this.handleChange} fullWidth/>
+                value = {password} onChange = {event => setPassword(event.target.value)} fullWidth/>
 
             {erros.general && (
               <Typography variant = 'body2' className = {classes.custonError}> {erros.general} </Typography>
@@ -113,9 +96,8 @@ class login extends Component {
         <Grid item sm />
       </Grid>
     )
-  }
 }
-login.propTypes = {
+Login.propTypes = {
   classes: PropTypes.object.isRequired
 }
-export default withStyles(styles)(login);
+export default withStyles(styles)(Login);
