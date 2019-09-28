@@ -15,7 +15,7 @@ exports.registrar = (req, res) => {
     const {valid, erros} = validarRegistroDados(novoUser)
     if (!valid) 
         return res.status(400).json({erros})
-    const noImg = 'no-img.png'
+    const noImg = "no-img.png"
 
     admin.firestore().doc(`/users/${novoUser.handle}`).get().then(doc => {
         if (doc.exists)
